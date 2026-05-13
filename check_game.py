@@ -62,19 +62,18 @@ def send_notification(title, url):
     )
     print(f"Notification sent: {title}")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     seen = load_seen()
     videos = get_recent_condensed_game()
-
     new_count = 0
-    for video_id, title, url in videos:
-        if video_id not in seen:
+    for vid, title, url in videos:
+        if vid not in seen:
             send_notification(title, url)
-            seen.add(video_id)
+            seen.add(vid)
             new_count += 1
-
+    # Always save so the file exists for git
+    save_seen(seen)
     if new_count:
-        save_seen(seen)
-        print(f"Sent {new_count} notification(s).")
+        print(f'Sent {new_count} notification(s).')
     else:
-        print(f"No new condensed games found for {TEAM}.")
+        print(f'No new condensed games found for {TEAM}.')
