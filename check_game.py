@@ -1,5 +1,6 @@
 import os, json, requests
 from datetime import datetime, timezone, timedelta, date
+import re
 from pathlib import Path
 
 YOUTUBE_API_KEY = os.environ['YOUTUBE_API_KEY']
@@ -33,7 +34,7 @@ def get_recent_condensed_game():
         'part': 'snippet',
         'order': 'date',
         'type': 'video',
-        'q': f'{TEAM} condensed game',
+        'q': f'{TEAM} game highlights',
         'publishedAfter': cutoff.strftime('%Y-%m-%dT%H:%M:%SZ'),
         'maxResults': 5,
     }
@@ -43,7 +44,11 @@ def get_recent_condensed_game():
     for item in r.json().get('items', []):
         title = item['snippet']['title']
         vid   = item['id']['videoId']
-        if 'condensed' in title.lower() and TEAM.lower() in title.lower():
+        title_lower = title.lower()
+        team_match = TEAM.lower() in title_lower
+        highlight_match = 'condensed' in title_lower or 'highlights' in title_lower
+        date_match = bool(re.search(r'\(\d{1,2}/\d{1,2}/\d{2,4}\)', title))
+        if team_match and highlight_match and date_match:
             results.append((vid, title, f'https://www.youtube.com/watch?v={vid}'))
     return results
 
