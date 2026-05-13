@@ -26,7 +26,7 @@ def save_seen(seen):
     with open(SEEN_FILE, 'w') as f: json.dump(list(seen), f)
 
 def get_recent_condensed_game():
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=12)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     params = {
         'key': YOUTUBE_API_KEY,
         'channelId': MLB_CHANNEL_ID,
