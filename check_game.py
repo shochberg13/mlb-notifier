@@ -56,7 +56,7 @@ def send_notification(title, url):
     requests.post(
         f'https://ntfy.sh/{NTFY_TOPIC}',
         headers={
-            'Title': f'⚾ {TEAM} condensed game is ready',
+            'Title': f'{TEAM} condensed game is available',
             'Priority': 'default',
             'Tags': 'baseball',
             'Click': url,
