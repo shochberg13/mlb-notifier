@@ -9,7 +9,7 @@ Tapping the notification opens the video immediately.
 
 ## How it works
 
-1. GitHub Actions runs a Python script every 30 minutes from 5pm–5am ET
+1. GitHub Actions runs a Python script every 6pm, 9pm, and 5am UTC.
 2. The script searches MLB's YouTube channel for a new condensed game for your team
 3. If a new one is found, it sends a push notification via ntfy to your phone
 4. Tapping the notification opens the YouTube video directly
