@@ -1,7 +1,7 @@
 # MLB Condensed Game Notifier
 
 Get a push notification on your phone when your team's condensed game is available
-on YouTube — no spoilers, no browsing required.
+on YouTube — no spoilers, no browsing required. Completely free!
 
 Uses GitHub Actions (free) to poll YouTube every 30 minutes and
 [ntfy](https://ntfy.sh) to deliver a push notification directly to your phone.
