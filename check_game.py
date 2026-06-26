@@ -1,32 +1,44 @@
 import os, json, requests
 from datetime import datetime, timezone, timedelta, date
-import re
 from pathlib import Path
 
+# --- Configuration (set via GitHub Actions secrets/variables) ---
 YOUTUBE_API_KEY = os.environ['YOUTUBE_API_KEY']
 NTFY_TOPIC      = os.environ['NTFY_TOPIC']
-TEAMS           = [t.strip() for t in os.environ.get('MLB_TEAM', 'Red Sox').split(',')]
-SEEN_FILE       = 'seen_videos.json'
-MLB_CHANNEL_ID  = 'UCoLrcjPV5PbUrUyXq5mjc_A'
 
-SEASON_START = (3, 1)   # March 1
-SEASON_END   = (11, 15) # November 15
+# MLB_TEAM can be a single team ("Red Sox") or comma-separated ("Red Sox, Cubs")
+TEAMS          = [t.strip() for t in os.environ.get('MLB_TEAM', 'Red Sox').split(',')]
+
+SEEN_FILE      = 'seen_videos.json'          # tracks already-notified videos to prevent duplicates
+MLB_CHANNEL_ID = 'UCoLrcjPV5PbUrUyXq5mjc_A' # official MLB YouTube channel
+
+# Script only runs during baseball season — exits early otherwise
+SEASON_START = (3, 1)    # March 1  (covers spring training)
+SEASON_END   = (11, 15)  # November 15 (covers full postseason)
 
 def in_season():
+    """Returns True if today falls within the configured season window."""
     today = date.today()
     start = date(today.year, *SEASON_START)
     end   = date(today.year, *SEASON_END)
     return start <= today <= end
 
 def load_seen():
+    """Loads the set of already-notified video IDs from disk."""
     if Path(SEEN_FILE).exists():
         with open(SEEN_FILE) as f: return set(json.load(f))
     return set()
 
 def save_seen(seen):
+    """Persists the set of seen video IDs so it survives across runs."""
     with open(SEEN_FILE, 'w') as f: json.dump(list(seen), f)
 
 def get_recent_condensed_games(team):
+    """
+    Searches MLB's YouTube channel for a condensed/highlights game video
+    for the given team, posted in the last 24 hours.
+    Returns a list of (video_id, title, url) tuples.
+    """
     cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     params = {
         'key': YOUTUBE_API_KEY,
@@ -40,26 +52,35 @@ def get_recent_condensed_games(team):
     }
     r = requests.get('https://www.googleapis.com/youtube/v3/search', params=params)
     r.raise_for_status()
+
     results = []
     for item in r.json().get('items', []):
         title = item['snippet']['title']
         vid   = item['id']['videoId']
         title_lower = title.lower()
-        team_match      = team.lower() in title_lower
+
+        # Must mention the team
+        team_match = team.lower() in title_lower
+
+        # Must be a condensed game or highlights video (not a short clip)
         highlight_match = 'condensed' in title_lower or 'highlights' in title_lower
-        date_match      = bool(re.search(r'\(\d{1,2}/\d{1,2}/\d{2,4}\)', title))
-        if team_match and highlight_match and date_match:
+
+        print(f'  Checking: "{title}" | team={team_match} highlight={highlight_match}')
+
+        if team_match and highlight_match:
             results.append((vid, title, f'https://www.youtube.com/watch?v={vid}'))
+
     return results
 
 def send_notification(team, title, url):
+    """Sends a push notification via ntfy.sh to the configured topic."""
     requests.post(
         f'https://ntfy.sh/{NTFY_TOPIC}',
         headers={
             'Title': f'{team} condensed game is available',
             'Priority': 'default',
             'Tags': 'baseball',
-            'Click': url,
+            'Click': url,  # tapping the notification opens this URL
         },
         data=title,
     )
@@ -74,14 +95,18 @@ if __name__ == '__main__':
     new_count = 0
 
     for team in TEAMS:
+        print(f'Checking for {team} condensed game...')
         videos = get_recent_condensed_games(team)
         for vid, title, url in videos:
             if vid not in seen:
                 send_notification(team, title, url)
                 seen.add(vid)
                 new_count += 1
+            else:
+                print(f'  Already notified: "{title}" — skipping.')
 
     save_seen(seen)
+
     if new_count:
         print(f'Sent {new_count} notification(s).')
     else:
