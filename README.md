@@ -7,7 +7,25 @@ Uses GitHub Actions (free) to poll YouTube every 30 minutes and
 [ntfy](https://ntfy.sh) to deliver a push notification directly to your phone.
 Tapping the notification opens the video immediately.
 
-## How it works
+## Two ways to use this
+
+### Option A: Easy mode (just want notifications, no setup)
+
+If someone you know is already running this (polling for your team), you don't
+need to fork anything or touch GitHub at all. Just:
+
+1. Install ntfy: [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy) | [iOS](https://apps.apple.com/us/app/ntfy/id1625396347)
+2. Subscribe to the topic they give you (e.g. `seth-mlb-notifier-detroit-tigers`)
+3. Done. You'll get a push notification whenever that team's condensed game is posted.
+
+You have zero control over the schedule or filtering in this mode — you're
+just riding along on someone else's setup. If that's all you want, stop reading here.
+
+### Option B: Full control (run your own copy)
+
+If you want your own schedule, your own team list, or just don't want to rely
+on someone else keeping their repo running, fork this repo and run your own
+independent copy. This takes about 20 minutes and is fully described below.
 
 1. GitHub Actions runs a Python script every 6pm, 9pm, and 5am UTC.
 2. The script searches MLB's YouTube channel for a new condensed game for your team
