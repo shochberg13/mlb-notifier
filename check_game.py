@@ -1,3 +1,4 @@
+import re
 import os, json, requests
 from datetime import datetime, timezone, timedelta, date
 from pathlib import Path
@@ -33,6 +34,8 @@ def save_seen(seen):
     """Persists the set of seen video IDs so it survives across runs."""
     with open(SEEN_FILE, 'w') as f: json.dump(list(seen), f)
 
+import re  # add this back to the imports at the top
+
 def get_recent_condensed_games(team):
     """
     Searches MLB's YouTube channel for a condensed/highlights game video
@@ -62,12 +65,20 @@ def get_recent_condensed_games(team):
         # Must mention the team
         team_match = team.lower() in title_lower
 
-        # Must be a condensed game or highlights video (not a short clip)
-        highlight_match = 'condensed' in title_lower or 'highlights' in title_lower
+        # Must say "game highlights" (or "condensed") — plain "highlights" alone
+        # matches too many unrelated recap/moment videos
+        highlight_match = 'game highlights' in title_lower or 'condensed' in title_lower
 
-        print(f'  Checking: "{title}" | team={team_match} highlight={highlight_match}')
+        # Real condensed games always LEAD with the matchup, e.g.
+        # "Red Sox vs Rockies Full Game Highlights". Recap videos bury the
+        # matchup in parentheses near the end instead, e.g.
+        # "...homer! | MLB Highlights (Red Sox vs Mets)" — so we check that
+        # "vs" appears near the start of the title, not just anywhere in it.
+        vs_near_start = bool(re.search(r'^.{0,30}\bvs\.?\b', title_lower))
 
-        if team_match and highlight_match:
+        print(f'  Checking: "{title}" | team={team_match} highlight={highlight_match} vs_start={vs_near_start}')
+
+        if team_match and highlight_match and vs_near_start:
             results.append((vid, title, f'https://www.youtube.com/watch?v={vid}'))
 
     return results
