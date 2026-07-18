@@ -34,8 +34,6 @@ def save_seen(seen):
     """Persists the set of seen video IDs so it survives across runs."""
     with open(SEEN_FILE, 'w') as f: json.dump(list(seen), f)
 
-import re  # add this back to the imports at the top
-
 def get_recent_condensed_games(team):
     """
     Searches MLB's YouTube channel for a condensed/highlights game video
