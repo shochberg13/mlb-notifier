@@ -49,7 +49,7 @@ def get_recent_condensed_games(team):
         'type': 'video',
         'q': f'{team} game highlights',
         'publishedAfter': cutoff.strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'maxResults': 5,
+        'maxResults': 20,
     }
     r = requests.get('https://www.googleapis.com/youtube/v3/search', params=params)
     r.raise_for_status()
