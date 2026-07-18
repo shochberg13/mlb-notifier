@@ -40,7 +40,7 @@ def get_recent_condensed_games(team):
     for the given team, posted in the last 24 hours.
     Returns a list of (video_id, title, url) tuples.
     """
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=48)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     params = {
         'key': YOUTUBE_API_KEY,
         'channelId': MLB_CHANNEL_ID,
@@ -49,7 +49,7 @@ def get_recent_condensed_games(team):
         'type': 'video',
         'q': f'{team} game highlights',
         'publishedAfter': cutoff.strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'maxResults': 20,
+        'maxResults': 5,
     }
     r = requests.get('https://www.googleapis.com/youtube/v3/search', params=params)
     r.raise_for_status()
