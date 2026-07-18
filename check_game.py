@@ -84,18 +84,20 @@ def get_recent_condensed_games(team):
     return results
 
 def send_notification(team, title, url):
-    """Sends a push notification via ntfy.sh to the configured topic."""
+    """Sends a push notification via ntfy.sh to a team-specific topic."""
+    topic_suffix = team.lower().replace(' ', '-')  # "Red Sox" -> "red-sox", "Detroit Tigers" -> "detroit-tigers"
+    topic = f'{NTFY_TOPIC}-{topic_suffix}'          # e.g. "seth-mlb-notifier-red-sox"
     requests.post(
-        f'https://ntfy.sh/{NTFY_TOPIC}',
+        f'https://ntfy.sh/{topic}',
         headers={
             'Title': f'{team} condensed game is available',
             'Priority': 'default',
             'Tags': 'baseball',
-            'Click': url,  # tapping the notification opens this URL
+            'Click': url,
         },
         data=title,
     )
-    print(f'Notification sent: {title}')
+    print(f'Notification sent to {topic}: {title}')
 
 if __name__ == '__main__':
     if not in_season():
