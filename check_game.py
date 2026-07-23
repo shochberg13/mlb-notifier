@@ -63,9 +63,12 @@ def get_recent_condensed_games(team):
         # Must mention the team
         team_match = team.lower() in title_lower
 
-        # Must say "game highlights" (or "condensed") — plain "highlights" alone
-        # matches too many unrelated recap/moment videos
-        highlight_match = 'game highlights' in title_lower or 'condensed' in title_lower
+        # Must say "game" & "highlights" (or "condensed") — plain "highlights" alone
+        # matches too many unrelated recap/moment videos. "game highlights" as one string
+        # is too restrictive, as doubleheaders sometimes have "Game 1 Highlights"
+        game_match = 'game' in title_lower
+        highlights_word_match = 'highlights' in title_lower
+        highlight_match = (game_match and highlights_word_match) or 'condensed' in title_lower
 
         # Real condensed games always LEAD with the matchup, e.g.
         # "Red Sox vs Rockies Full Game Highlights". Recap videos bury the
