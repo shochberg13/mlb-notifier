@@ -2,12 +2,16 @@ name: Check for MLB Condensed Game
 
 on:
   schedule:
-    - cron: '0 22 * * *'   # 5pm ET (22:00 UTC)
-    - cron: '0 23 * * *'   # 6pm ET (23:00 UTC)
-    - cron: '0 0 * * *'   # 7pm ET (0:00 UTC)
-    - cron: '0 1 * * *'   # 8pm ET (1:00 UTC)
-    - cron: '0 2 * * *'    # 9pm ET (2:00 UTC)
-    - cron: '0 10 * * *'   # 5am ET (10am UTC) - catches late west coast games
+    - cron: '0 21 * * *'  # 5pm ET
+    - cron: '0 22 * * *'  # 6pm ET
+    - cron: '0 23 * * *'  # 7pm ET
+    - cron: '0 0 * * *'   # 8pm ET
+    - cron: '0 1 * * *'   # 9pm ET
+    - cron: '0 2 * * *'   # 10pm ET
+    - cron: '0 3 * * *'   # 11pm ET
+    - cron: '0 4 * * *'   # midnight ET
+    - cron: '0 7 * * *'   # 3am ET
+    - cron: '0 8 * * *'   # 4am ET
   workflow_dispatch:
 
 jobs:
