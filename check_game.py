@@ -2,6 +2,7 @@ import re
 import os, json, requests
 from datetime import datetime, timezone, timedelta, date
 from pathlib import Path
+from urllib.parse import quote_plus
 
 # --- Configuration (set via GitHub Actions secrets/variables) ---
 YOUTUBE_API_KEY = os.environ['YOUTUBE_API_KEY']
@@ -84,21 +85,36 @@ def get_recent_condensed_games(team):
 
     return results
 
+def build_click_url(team, title, youtube_url):
+    """
+    Returns the URL the notification should open when tapped.
+
+    For Red Sox only: links to a Google search for the video's exact title
+    instead of the direct YouTube URL. This is a workaround for a NextDNS
+    rule that blocks youtube.com — searching on Google and clicking the
+    embedded video result still plays it without a full navigation to
+    youtube.com. All other teams get the normal direct YouTube link.
+    """
+    if team.lower() == 'red sox':
+        return f'https://www.google.com/search?q={quote_plus(title)}'
+    return youtube_url
+
 def send_notification(team, title, url):
     """Sends a push notification via ntfy.sh to a team-specific topic."""
     topic_suffix = team.lower().replace(' ', '-')  # "Red Sox" -> "red-sox", "Detroit Tigers" -> "detroit-tigers"
     topic = f'{NTFY_TOPIC}-{topic_suffix}'          # e.g. "seth-mlb-notifier-red-sox"
+    click_url = build_click_url(team, title, url)
     requests.post(
         f'https://ntfy.sh/{topic}',
         headers={
             'Title': f'{team} condensed game is available',
             'Priority': 'default',
             'Tags': 'baseball',
-            'Click': url,
+            'Click': click_url,
         },
         data=title,
     )
-    print(f'Notification sent to {topic}: {title}')
+    print(f'Notification sent to {topic}: {title} -> {click_url}')
 
 if __name__ == '__main__':
     if not in_season():
