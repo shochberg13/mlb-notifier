@@ -1,5 +1,12 @@
 {
-  "Red Sox": [],
-  "Tigers": ["DdjzdBPfZfc"],
-  "Phillies": ["_0ZXXc1p5To"]
+  "Red Sox": [
+    "condensed-game-laa-bos-9-9-26"
+  ],
+  "Tigers": [
+    "DdjzdBPfZfc"
+  ],
+  "Phillies": [
+    "--aA1jztfz8",
+    "_0ZXXc1p5To"
+  ]
 }
