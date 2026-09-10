@@ -2,45 +2,55 @@ import re
 import os, json, requests
 from datetime import datetime, timezone, timedelta, date
 from pathlib import Path
-from urllib.parse import quote_plus
+
+from mlb_stats_api import get_recent_condensed_game_mlb
 
 # --- Configuration (set via GitHub Actions secrets/variables) ---
 YOUTUBE_API_KEY = os.environ['YOUTUBE_API_KEY']
 NTFY_TOPIC      = os.environ['NTFY_TOPIC']
 
-# MLB_TEAM can be a single team ("Red Sox") or comma-separated ("Red Sox, Cubs")
 TEAMS          = [t.strip() for t in os.environ.get('MLB_TEAM', 'Red Sox').split(',')]
 
-SEEN_FILE      = 'seen_videos.json'          # tracks already-notified videos to prevent duplicates
-MLB_CHANNEL_ID = 'UCoLrcjPV5PbUrUyXq5mjc_A' # official MLB YouTube channel
+SEEN_FILE      = 'seen_videos.json'
+MLB_CHANNEL_ID = 'UCoLrcjPV5PbUrUyXq5mjc_A'
 
-# Script only runs during baseball season — exits early otherwise
-SEASON_START = (3, 1)    # March 1  (covers spring training)
-SEASON_END   = (11, 15)  # November 15 (covers full postseason)
+# Teams that should link to mlb.com (via the Stats API) instead of YouTube.
+# Currently just Red Sox, since a NextDNS rule on this account blocks
+# youtube.com but leaves mlb.com untouched.
+MLB_LINK_TEAMS = {'red sox'}
+
+SEASON_START = (3, 1)
+SEASON_END   = (11, 15)
+
 
 def in_season():
-    """Returns True if today falls within the configured season window."""
     today = date.today()
     start = date(today.year, *SEASON_START)
     end   = date(today.year, *SEASON_END)
     return start <= today <= end
 
+
 def load_seen():
-    """Loads the set of already-notified video IDs from disk."""
+    """
+    Loads already-notified video IDs, keyed per team, e.g.:
+      {"Red Sox": ["abc123"], "Tigers": ["xyz789"]}
+    Nesting by team means you can clear one team's history (to force a
+    re-notification, or after a filter change) without touching any
+    other team's data — just edit that team's list in the JSON file.
+    """
     if Path(SEEN_FILE).exists():
-        with open(SEEN_FILE) as f: return set(json.load(f))
-    return set()
+        with open(SEEN_FILE) as f:
+            return json.load(f)
+    return {}
+
 
 def save_seen(seen):
-    """Persists the set of seen video IDs so it survives across runs."""
-    with open(SEEN_FILE, 'w') as f: json.dump(list(seen), f)
+    with open(SEEN_FILE, 'w') as f:
+        json.dump(seen, f, indent=2)
 
-def get_recent_condensed_games(team):
-    """
-    Searches MLB's YouTube channel for a condensed/highlights game video
-    for the given team, posted in the last 24 hours.
-    Returns a list of (video_id, title, url) tuples.
-    """
+
+def get_recent_condensed_games_youtube(team):
+    """Searches MLB's YouTube channel for a condensed/highlights video for the team."""
     cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     params = {
         'key': YOUTUBE_API_KEY,
@@ -61,21 +71,10 @@ def get_recent_condensed_games(team):
         vid   = item['id']['videoId']
         title_lower = title.lower()
 
-        # Must mention the team
         team_match = team.lower() in title_lower
-
-        # Must say "game" & "highlights" (or "condensed") — plain "highlights" alone
-        # matches too many unrelated recap/moment videos. "game highlights" as one string
-        # is too restrictive, as doubleheaders sometimes have "Game 1 Highlights"
         game_match = 'game' in title_lower
         highlights_word_match = 'highlights' in title_lower
         highlight_match = (game_match and highlights_word_match) or 'condensed' in title_lower
-
-        # Real condensed games always LEAD with the matchup, e.g.
-        # "Red Sox vs Rockies Full Game Highlights". Recap videos bury the
-        # matchup in parentheses near the end instead, e.g.
-        # "...homer! | MLB Highlights (Red Sox vs Mets)" — so we check that
-        # "vs" appears near the start of the title, not just anywhere in it.
         vs_near_start = bool(re.search(r'^.{0,30}\bvs\.?\b', title_lower))
 
         print(f'  Checking: "{title}" | team={team_match} highlight={highlight_match} vs_start={vs_near_start}')
@@ -85,59 +84,48 @@ def get_recent_condensed_games(team):
 
     return results
 
-def build_click_url(team, title, youtube_url):
-    """
-    Returns the URL the notification should open when tapped.
 
-    For Red Sox only: links to a Google search for the video's exact title
-    instead of the direct YouTube URL. This is a workaround for a NextDNS
-    rule that blocks youtube.com — searching on Google and clicking the
-    embedded video result still plays it without a full navigation to
-    youtube.com. All other teams get the normal direct YouTube link.
+def get_recent_condensed_games(team):
     """
-    if team.lower() == 'red sox':
-        return f'https://www.google.com/search?q={quote_plus(title)}'
-    return youtube_url
+    Returns a list of (id, title, url) tuples for the team's recent
+    condensed game video(s). Teams in MLB_LINK_TEAMS use MLB's own Stats
+    API (mlb.com links); everyone else uses YouTube search.
+    """
+    if team.lower() in MLB_LINK_TEAMS:
+        result = get_recent_condensed_game_mlb(team)
+        if result is None:
+            print(f'  No condensed game found on mlb.com for {team} yet.')
+            return []
+        headline, url = result
+        # Use the mlb.com slug (last URL segment) as the unique dedupe ID —
+        # plays the same role the YouTube video ID plays for other teams.
+        video_id = url.rstrip('/').split('/')[-1]
+        print(f'  Found via MLB Stats API: "{headline}"')
+        return [(video_id, headline, url)]
+    else:
+        return get_recent_condensed_games_youtube(team)
+
 
 def send_notification(team, title, url):
     """Sends a push notification via ntfy.sh to a team-specific topic."""
-    topic_suffix = team.lower().replace(' ', '-')  # "Red Sox" -> "red-sox", "Detroit Tigers" -> "detroit-tigers"
-    topic = f'{NTFY_TOPIC}-{topic_suffix}'          # e.g. "seth-mlb-notifier-red-sox"
-    click_url = build_click_url(team, title, url)
+    topic_suffix = team.lower().replace(' ', '-')
+    topic = f'{NTFY_TOPIC}-{topic_suffix}'
     requests.post(
         f'https://ntfy.sh/{topic}',
         headers={
             'Title': f'{team} condensed game is available',
             'Priority': 'default',
             'Tags': 'baseball',
-            'Click': click_url,
+            'Click': url,
         },
         data=title,
     )
-    print(f'Notification sent to {topic}: {title} -> {click_url}')
+    print(f'Notification sent to {topic}: {title} -> {url}')
+
 
 if __name__ == '__main__':
     if not in_season():
         print(f'Off-season ({date.today()}). Exiting.')
         exit(0)
 
-    seen = load_seen()
-    new_count = 0
-
-    for team in TEAMS:
-        print(f'Checking for {team} condensed game...')
-        videos = get_recent_condensed_games(team)
-        for vid, title, url in videos:
-            if vid not in seen:
-                send_notification(team, title, url)
-                seen.add(vid)
-                new_count += 1
-            else:
-                print(f'  Already notified: "{title}" — skipping.')
-
-    save_seen(seen)
-
-    if new_count:
-        print(f'Sent {new_count} notification(s).')
-    else:
-        print(f'No new condensed games found for {", ".join(TEAMS)}.')
+    seen =
