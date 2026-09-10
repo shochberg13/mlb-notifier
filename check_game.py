@@ -129,3 +129,26 @@ if __name__ == '__main__':
         exit(0)
 
     seen = load_seen()
+    new_count = 0
+
+    for team in TEAMS:
+        print(f'Checking for {team} condensed game...')
+        team_seen = set(seen.get(team, []))
+        videos = get_recent_condensed_games(team)
+
+        for vid, title, url in videos:
+            if vid not in team_seen:
+                send_notification(team, title, url)
+                team_seen.add(vid)
+                new_count += 1
+            else:
+                print(f'  Already notified: "{title}" — skipping.')
+
+        seen[team] = list(team_seen)
+
+    save_seen(seen)
+
+    if new_count:
+        print(f'Sent {new_count} notification(s).')
+    else:
+        print(f'No new condensed games found for {", ".join(TEAMS)}.')
