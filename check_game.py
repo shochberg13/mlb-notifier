@@ -128,4 +128,4 @@ if __name__ == '__main__':
         print(f'Off-season ({date.today()}). Exiting.')
         exit(0)
 
-    seen =
+    seen = load_seen()
