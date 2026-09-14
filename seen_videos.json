@@ -1,20 +1,23 @@
 {
   "Red Sox": [
     "condensed-game-kc-bos-9-11-26",
-    "condensed-game-laa-bos-9-9-26"
+    "condensed-game-laa-bos-9-9-26",
+    "condensed-game-kc-bos-9-13-26"
   ],
   "Tigers": [
-    "m40hFENH7Wo",
-    "B4xiezPDMXU",
     "DdjzdBPfZfc",
-    "5ree9lieZLk"
+    "condensed-game-col-det-9-13-26",
+    "B4xiezPDMXU",
+    "5ree9lieZLk",
+    "m40hFENH7Wo"
   ],
   "Phillies": [
-    "ziuq6JjIpNM",
     "_Q164mKTb3o",
-    "R2FK2jYFw4o",
+    "--aA1jztfz8",
+    "ziuq6JjIpNM",
+    "condensed-game-phi-atl-9-13-26",
     "_0ZXXc1p5To",
     "ITcVpirYefY",
-    "--aA1jztfz8"
+    "R2FK2jYFw4o"
   ]
 }
