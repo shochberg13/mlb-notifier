@@ -32,7 +32,6 @@ jobs:
 
       - name: Run check
         env:
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           MLB_TEAM: ${{ vars.MLB_TEAM }}
         run: python check_game.py
