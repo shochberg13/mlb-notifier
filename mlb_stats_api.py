@@ -12,9 +12,36 @@ from datetime import date, timedelta
 
 # MLB Stats API team IDs — add more here if you ever add more teams to MLB_LINK_TEAMS
 TEAM_IDS = {
+    'angels': 108, 
+    'diamondbacks': 109, 
+    'orioles': 110, 
     'red sox': 111,
-    'tigers': 116,
+    'cubs': 112, 
+    'reds': 113,
+    'guardians': 114,
+    'rockies': 115,
+    'tigers': 116, 
+    'astros': 117, 
+    'royals': 118, 
+    'dodgers': 119,
+    'nationals': 120,
+    'mets': 121,
+    'athletics': 133,
+    'pirates': 134,
+    'padres': 135, 
+    'mariners': 136,
+    'giants': 137,
+    'cardinals': 138,
+    'rays': 139,
+    'rangers': 140,
+    'blue jays': 141,
+    'twins': 142,
     'phillies': 143,
+    'braves': 144,
+    'white sox': 145,
+    'marlins': 146,
+    'yankees': 147,
+    'brewers': 158,
 }
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
