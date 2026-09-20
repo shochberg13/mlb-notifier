@@ -88,7 +88,12 @@ def get_condensed_game_link(game_pk):
     if r.status_code != 200:
         return None
 
-    items = r.json().get('highlights', {}).get('highlights', {}).get('items', [])
+    # Use "or {}" rather than .get()'s dict-default, since the API can return
+    # an explicit `null` for "highlights" on very recent/in-progress games —
+    # .get('highlights', {}) would still pass that None through untouched.
+    highlights = (r.json().get('highlights') or {}).get('highlights') or {}
+    items = highlights.get('items', [])
+
     for item in items:
         headline = (item.get('headline') or '').strip()
         slug = item.get('slug')
@@ -102,10 +107,18 @@ def get_recent_condensed_games(team):
     """
     Returns a list of (id, title, url) tuples for the team's recent
     condensed game video, checking the most recent games first.
+    A failure on any single game is logged and skipped rather than
+    crashing the whole run — that way one bad response for this team
+    can't prevent other teams later in TEAMS from being checked.
     """
     game_pks = get_recent_game_pks(team)
     for game_pk in reversed(game_pks):  # most recent game first
-        result = get_condensed_game_link(game_pk)
+        try:
+            result = get_condensed_game_link(game_pk)
+        except Exception as e:
+            print(f'  Error checking game {game_pk}: {e}')
+            continue
+
         if result:
             headline, url = result
             # Use the mlb.com slug (last URL segment) as the unique dedupe ID
