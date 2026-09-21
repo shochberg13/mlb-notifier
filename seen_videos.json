@@ -1,33 +1,33 @@
 {
   "Red Sox": [
-    "condensed-game-kc-bos-9-11-26",
-    "condensed-game-laa-bos-9-9-26",
-    "condensed-game-bos-tex-9-16-26",
-    "condensed-game-bos-tb-9-19-26",
-    "condensed-game-bos-tex-9-15-26",
-    "condensed-game-kc-bos-9-13-26",
     "condensed-game-kc-bos-9-12-26",
-    "condensed-game-bos-tex-9-17-26",
+    "condensed-game-bos-tex-9-15-26",
+    "condensed-game-kc-bos-9-11-26",
     "condensed-game-bos-tb-9-18-26",
-    "condensed-game-bos-tb-9-20-26"
+    "condensed-game-bos-tex-9-16-26",
+    "condensed-game-kc-bos-9-13-26",
+    "condensed-game-bos-tb-9-19-26",
+    "condensed-game-bos-tb-9-20-26",
+    "condensed-game-laa-bos-9-9-26",
+    "condensed-game-bos-tex-9-17-26"
   ],
   "Tigers": [
-    "condensed-game-det-cws-9-17-26",
     "condensed-game-col-det-9-13-26",
     "condensed-game-det-tor-9-15-26",
-    "condensed-game-det-tor-9-16-26",
-    "condensed-game-det-cws-9-18-26",
     "condensed-game-det-tor-9-14-26",
     "condensed-game-det-cws-9-19-26",
-    "condensed-game-det-cws-9-20-26"
+    "condensed-game-det-tor-9-16-26",
+    "condensed-game-det-cws-9-17-26",
+    "condensed-game-det-cws-9-20-26",
+    "condensed-game-det-cws-9-18-26"
   ],
   "Phillies": [
-    "condensed-game-phi-wsh-9-16-26",
-    "condensed-game-phi-wsh-9-15-26",
     "condensed-game-phi-nym-9-20-26",
-    "condensed-game-phi-atl-9-13-26",
-    "condensed-game-phi-nym-9-17-26",
+    "condensed-game-phi-nym-9-19-26",
     "condensed-game-phi-nym-9-18-26",
-    "condensed-game-phi-nym-9-19-26"
+    "condensed-game-phi-wsh-9-15-26",
+    "condensed-game-phi-wsh-9-16-26",
+    "condensed-game-phi-nym-9-17-26",
+    "condensed-game-phi-atl-9-13-26"
   ]
 }
