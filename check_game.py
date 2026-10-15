@@ -131,10 +131,10 @@ def get_recent_condensed_games(team):
 
 
 def send_notification(team, title, url):
-    """Sends a push notification via ntfy.sh to a team-specific topic."""
+    """Sends a push notification via ntfy.sh. Returns True only if ntfy accepted it."""
     topic_suffix = team.lower().replace(' ', '-')  # "Red Sox" -> "red-sox"
     topic = f'{NTFY_TOPIC}-{topic_suffix}'          # e.g. "seth-mlb-notifier-red-sox"
-    requests.post(
+    r = requests.post(
         f'https://ntfy.sh/{topic}',
         headers={
             'Title': f'{team} condensed game is available',
@@ -144,7 +144,11 @@ def send_notification(team, title, url):
         },
         data=title,
     )
+    if r.status_code != 200:
+        print(f'FAILED to notify {topic}: HTTP {r.status_code} {r.text[:200]}')
+        return False
     print(f'Notification sent to {topic}: {title} -> {url}')
+    return True
 
 
 if __name__ == '__main__':
@@ -162,9 +166,9 @@ if __name__ == '__main__':
 
         for vid, title, url in videos:
             if vid not in team_seen:
-                send_notification(team, title, url)
-                team_seen.add(vid)
-                new_count += 1
+                if send_notification(team, title, url):
+                    team_seen.add(vid)
+                    new_count += 1
             else:
                 print(f'  Already notified: "{title}" — skipping.')
 
